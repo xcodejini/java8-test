@@ -7,7 +7,8 @@ import lombok.Data;
  * @author jini
  *
  */
-public @Data class AlarmHistory {
+@Data
+public class AlarmHistory {
     
     public Long referId;
 }

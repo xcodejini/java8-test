@@ -11,18 +11,20 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.piolink.test.stream.model.AlarmHistory;
 import com.piolink.test.stream.model.Cswitch;
 import com.piolink.test.stream.model.Transaction;
 
+import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 
+ * @author jini
+ *
+ */
+@Slf4j
 public class StreamTester {
 
-    private static Logger logger = LoggerFactory.getLogger(StreamTester.class);
-    
     public static List<Transaction> transactionList = new ArrayList<>();
     public static List<AlarmHistory> alarmHistoryList = new ArrayList<>();
     public static List<Cswitch> cswitchList = new ArrayList<>();
@@ -35,8 +37,12 @@ public class StreamTester {
 
         Map<Currency, List<Transaction>> tranactionsByCurrencies = 
                 transactionList.stream()
-                .filter((Transaction t) -> t.isHeavyTransaction())
+                .filter((Transaction t) -> !t.isHeavyTransaction())
                 .collect(groupingBy(Transaction::getCurrency));
+        
+        for (Currency currency: tranactionsByCurrencies.keySet()) {
+            log.info(">> no heavy currency key: {}", currency);
+        }
         
        tranactionsByCurrencies = 
                 transactionList.stream()
@@ -44,36 +50,16 @@ public class StreamTester {
                 .collect(groupingBy(Transaction::getCurrency));
         
        for (Currency currency: tranactionsByCurrencies.keySet()) {
-           logger.info(">> currency key: {}", currency);
+           log.info(">> heavy currency key: {}", currency);
        }
     }
     
     public void predicate() {
         List<Transaction> filterTransactions = this.filterTransaction(Transaction::isHeavyTransaction);
+        
         for (Transaction transaction : filterTransactions) {
-            logger.info(">> heavy price: {}", transaction.getPrice());
+            log.info(">> heavy price: {}", transaction.getPrice());
         }        
-    }
-
-    public void stream_map_distinct_collect_toList() {
-        List<Long> referIdList = alarmHistoryList.stream().map(AlarmHistory::getReferId).distinct().collect(toList());        
-        for (Long referId : referIdList) {
-            logger.info(">> distinct referId: {}", referId);
-        }
-    }
-    
-    public void stream_map_collect_toList() {
-        List<Long> referIdList = alarmHistoryList.stream().map(AlarmHistory::getReferId).collect(toList());
-        for (Long referId : referIdList) {
-            logger.info(">> all referId: {}", referId);
-        }
-    }
-    
-    public void stream_collect_toMap() {
-        Map<Long, Cswitch> cswitchById = cswitchList.stream().collect(toMap(Cswitch::getId, t -> t));
-        for (long id : cswitchById.keySet()) {
-            logger.info(">> id: {}", cswitchById.get(id).getId());
-        }
     }
     
     private List<Transaction> filterTransaction(Predicate<Transaction> p) {
@@ -84,6 +70,36 @@ public class StreamTester {
             }
         }
         return resultList;
+    }    
+
+    public void stream_map_distinct_collect_toList() {
+        List<Long> referIdList = alarmHistoryList.stream()
+                .map(AlarmHistory::getReferId)
+                .distinct()
+                .collect(toList());
+        
+        for (Long referId : referIdList) {
+            log.info(">> distinct referId: {}", referId);
+        }
+    }
+    
+    public void stream_map_collect_toList() {
+        List<Long> referIdList = alarmHistoryList.stream()
+                .map(AlarmHistory::getReferId)
+                .collect(toList());
+        
+        for (Long referId : referIdList) {
+            log.info(">> all referId: {}", referId);
+        }
+    }
+    
+    public void stream_collect_toMap() {
+        Map<Long, Cswitch> cswitchById = cswitchList.stream()
+                .collect(toMap(Cswitch::getId, cswitch -> cswitch));
+        
+        for (long id : cswitchById.keySet()) {
+            log.info(">> id: {}", cswitchById.get(id).getId());
+        }
     }
     
     public static void main(String[] args) {
